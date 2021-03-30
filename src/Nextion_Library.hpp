@@ -19,15 +19,15 @@
 
 
 
-#ifndef DISPLAY_H_INCLUDED
-#define DISPLAY_H_INCLUDED
+#ifndef NEXTION_LIBRARY_H_INCLUDED
+#define NEXTION_LIBRARY_H_INCLUDED
 
 #include "Arduino.h"
 #include "HardwareSerial.h"
 #include "FS.h"
 #include "Configuration.hpp"
 
-class Nextion_Display_Class
+class Nextion_Class
 {
 protected:
     HardwareSerial Nextion_Serial;
@@ -122,15 +122,15 @@ public:
 
     uint8_t Page_History[5];
 
-    static Nextion_Display_Class* Instance_Pointer;
+    static Nextion_Class* Instance_Pointer;
 
     static void Default_Callback_Function_String_Data(const char*, uint8_t);
     static void Default_Callback_Function_Numeric_Data(uint32_t);
     static void Default_Callback_Function_Event(uint8_t);
 
     //Class setup
-    Nextion_Display_Class();
-    ~Nextion_Display_Class();
+    Nextion_Class();
+    ~Nextion_Class();
 
     //
 

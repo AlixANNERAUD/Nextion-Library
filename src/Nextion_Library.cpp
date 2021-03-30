@@ -17,11 +17,11 @@
  * 
 */
 
-#include "Driver/Display.hpp"
+#include "Nextion_Library.hpp"
 
-Nextion_Display_Class *Nextion_Display_Class::Instance_Pointer = NULL;
+Nextion_Class *Nextion_Class::Instance_Pointer = NULL;
 
-Nextion_Display_Class::Nextion_Display_Class() : Nextion_Serial(1),
+Nextion_Class::Nextion_Class() : Nextion_Serial(1),
                                                  Callback_Function_String_Data(Default_Callback_Function_String_Data),
                                                  Callback_Function_Numeric_Data(Default_Callback_Function_Numeric_Data),
                                                  Callback_Function_Event(Default_Callback_Function_Event)
@@ -44,7 +44,7 @@ Nextion_Display_Class::Nextion_Display_Class() : Nextion_Serial(1),
     memset(Temporary_String, '\0', sizeof(Temporary_String));
 }
 
-Nextion_Display_Class::~Nextion_Display_Class()
+Nextion_Class::~Nextion_Class()
 {
     if (Instance_Pointer == this)
     {
@@ -54,40 +54,41 @@ Nextion_Display_Class::~Nextion_Display_Class()
     vSemaphoreDelete(Serial_Semaphore);
 }
 
-void Nextion_Display_Class::Begin(uint32_t Baud_Rate, uint8_t RX_Pin, uint8_t TX_Pin)
+void Nextion_Class::Begin(uint32_t Baud_Rate, uint8_t RX_Pin, uint8_t TX_Pin)
 {
     Nextion_Serial.begin(Baud_Rate, SERIAL_8N1, RX_Pin, TX_Pin); //Nextion UART
-    Instruction_End();                                           // clear last entered command
+    Nextion_Serial.print("DRAKJHSUYDGBNCJHGJKSHBDN");            // exit transparent mode and clear last send command
+    Instruction_End();                                          
 }
 
-void Nextion_Display_Class::Set_Callback_Function_String_Data(void (*Function_Pointer)(const char *, uint8_t))
+void Nextion_Class::Set_Callback_Function_String_Data(void (*Function_Pointer)(const char *, uint8_t))
 {
     Callback_Function_String_Data = Function_Pointer;
 }
 
-void Nextion_Display_Class::Set_Callback_Function_Numeric_Data(void (*Function_Pointer)(uint32_t))
+void Nextion_Class::Set_Callback_Function_Numeric_Data(void (*Function_Pointer)(uint32_t))
 {
     Callback_Function_Numeric_Data = Function_Pointer;
 }
 
-void Nextion_Display_Class::Set_Callback_Function_Event(void (*Function_Pointer)(uint8_t))
+void Nextion_Class::Set_Callback_Function_Event(void (*Function_Pointer)(uint8_t))
 {
     Callback_Function_Event = Function_Pointer;
 }
 
-void Nextion_Display_Class::Default_Callback_Function_String_Data(const char *String, uint8_t Size)
+void Nextion_Class::Default_Callback_Function_String_Data(const char *String, uint8_t Size)
 {
 }
 
-void Nextion_Display_Class::Default_Callback_Function_Numeric_Data(uint32_t Numeric_Data)
+void Nextion_Class::Default_Callback_Function_Numeric_Data(uint32_t Numeric_Data)
 {
 }
 
-void Nextion_Display_Class::Default_Callback_Function_Event(uint8_t Event)
+void Nextion_Class::Default_Callback_Function_Event(uint8_t Event)
 {
 }
 
-void Nextion_Display_Class::Loop() //Parsing incomming data
+void Nextion_Class::Loop() //Parsing incomming data
 {
     if (Nextion_Serial.available())
     {
@@ -217,7 +218,7 @@ void Nextion_Display_Class::Loop() //Parsing incomming data
     }
 }
 
-void Nextion_Display_Class::Purge()
+void Nextion_Class::Purge()
 {
     Nextion_Serial.readStringUntil(0xFF);
     while (Nextion_Serial.peek() == 0xFF)
@@ -226,33 +227,33 @@ void Nextion_Display_Class::Purge()
     }
 }
 
-void Nextion_Display_Class::Write(int Data)
+void Nextion_Class::Write(int Data)
 {
     Nextion_Serial.write(Data);
 }
 
-void Nextion_Display_Class::Send_Raw(const __FlashStringHelper *Data)
+void Nextion_Class::Send_Raw(const __FlashStringHelper *Data)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Data);
     Instruction_End();
 }
 
-void Nextion_Display_Class::Send_Raw(String const &Data)
+void Nextion_Class::Send_Raw(String const &Data)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Data);
     Instruction_End();
 }
 
-void Nextion_Display_Class::Send_Raw(const char *Data)
+void Nextion_Class::Send_Raw(const char *Data)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Data);
     Instruction_End();
 }
 
-void Nextion_Display_Class::Refresh(const __FlashStringHelper *Object_Name)
+void Nextion_Class::Refresh(const __FlashStringHelper *Object_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("ref "));
@@ -260,17 +261,17 @@ void Nextion_Display_Class::Refresh(const __FlashStringHelper *Object_Name)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Refresh_Current_Page()
+void Nextion_Class::Refresh_Current_Page()
 {
     Get(F("dp"));
 }
 
-uint8_t &Nextion_Display_Class::Get_Current_Page()
+uint8_t &Nextion_Class::Get_Current_Page()
 {
     return Page_History[0];
 }
 
-void Nextion_Display_Class::Set_Current_Page(uint8_t const &Page_ID)
+void Nextion_Class::Set_Current_Page(uint8_t const &Page_ID)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("page "));
@@ -278,7 +279,7 @@ void Nextion_Display_Class::Set_Current_Page(uint8_t const &Page_ID)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Current_Page(const __FlashStringHelper *Page_Name)
+void Nextion_Class::Set_Current_Page(const __FlashStringHelper *Page_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("page "));
@@ -286,7 +287,7 @@ void Nextion_Display_Class::Set_Current_Page(const __FlashStringHelper *Page_Nam
     Instruction_End();
 }
 
-void Nextion_Display_Class::Draw_Advanced_Crop_Picture(uint16_t const &X_Destination, uint16_t const &Y_Destination, uint16_t const &Width, uint16_t const &Height, uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Picture_ID)
+void Nextion_Class::Draw_Advanced_Crop_Picture(uint16_t const &X_Destination, uint16_t const &Y_Destination, uint16_t const &Width, uint16_t const &Height, uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Picture_ID)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("xpic "));
@@ -306,7 +307,7 @@ void Nextion_Display_Class::Draw_Advanced_Crop_Picture(uint16_t const &X_Destina
     Instruction_End();
 }
 
-void Nextion_Display_Class::Draw_Fill(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Color)
+void Nextion_Class::Draw_Fill(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Color)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("fill"));
@@ -322,7 +323,7 @@ void Nextion_Display_Class::Draw_Fill(uint16_t const &X_Coordinate, uint16_t con
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Background_Color(const __FlashStringHelper *Object_Name, uint16_t const &Color, int8_t Type)
+void Nextion_Class::Set_Background_Color(const __FlashStringHelper *Object_Name, uint16_t const &Color, int8_t Type)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -336,7 +337,7 @@ void Nextion_Display_Class::Set_Background_Color(const __FlashStringHelper *Obje
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Time(const __FlashStringHelper *Object_Name, uint16_t const &Time)
+void Nextion_Class::Set_Time(const __FlashStringHelper *Object_Name, uint16_t const &Time)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     if (Time < 50)
@@ -349,7 +350,7 @@ void Nextion_Display_Class::Set_Time(const __FlashStringHelper *Object_Name, uin
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Reparse_Mode(uint8_t Mode)
+void Nextion_Class::Set_Reparse_Mode(uint8_t Mode)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     if (Mode == 0)
@@ -363,7 +364,7 @@ void Nextion_Display_Class::Set_Reparse_Mode(uint8_t Mode)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Trigger(const __FlashStringHelper *Object_Name, bool const &Enable)
+void Nextion_Class::Set_Trigger(const __FlashStringHelper *Object_Name, bool const &Enable)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -372,7 +373,7 @@ void Nextion_Display_Class::Set_Trigger(const __FlashStringHelper *Object_Name, 
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Picture(const __FlashStringHelper *Object_Name, uint8_t const &Picture_ID)
+void Nextion_Class::Set_Picture(const __FlashStringHelper *Object_Name, uint8_t const &Picture_ID)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -381,7 +382,7 @@ void Nextion_Display_Class::Set_Picture(const __FlashStringHelper *Object_Name, 
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Picture(String const &Object_Name, uint8_t const &Picture_ID)
+void Nextion_Class::Set_Picture(String const &Object_Name, uint8_t const &Picture_ID)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -390,7 +391,7 @@ void Nextion_Display_Class::Set_Picture(String const &Object_Name, uint8_t const
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Font_Color(const __FlashStringHelper *Object_Name, uint16_t const &Color, int8_t Type)
+void Nextion_Class::Set_Font_Color(const __FlashStringHelper *Object_Name, uint16_t const &Color, int8_t Type)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -404,7 +405,7 @@ void Nextion_Display_Class::Set_Font_Color(const __FlashStringHelper *Object_Nam
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Input_Type(const __FlashStringHelper *Object_Name, uint8_t const &Input_Type)
+void Nextion_Class::Set_Input_Type(const __FlashStringHelper *Object_Name, uint8_t const &Input_Type)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -413,7 +414,7 @@ void Nextion_Display_Class::Set_Input_Type(const __FlashStringHelper *Object_Nam
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Text(const __FlashStringHelper *Object_Name, char Value)
+void Nextion_Class::Set_Text(const __FlashStringHelper *Object_Name, char Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -423,7 +424,7 @@ void Nextion_Display_Class::Set_Text(const __FlashStringHelper *Object_Name, cha
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Text(const __FlashStringHelper *Object_Name, const __FlashStringHelper *Value)
+void Nextion_Class::Set_Text(const __FlashStringHelper *Object_Name, const __FlashStringHelper *Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -433,7 +434,7 @@ void Nextion_Display_Class::Set_Text(const __FlashStringHelper *Object_Name, con
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Text(String const &Object_Name, String const &Value)
+void Nextion_Class::Set_Text(String const &Object_Name, String const &Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -443,7 +444,7 @@ void Nextion_Display_Class::Set_Text(String const &Object_Name, String const &Va
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Text(const __FlashStringHelper *Object_Name, const char *Value)
+void Nextion_Class::Set_Text(const __FlashStringHelper *Object_Name, const char *Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -453,7 +454,7 @@ void Nextion_Display_Class::Set_Text(const __FlashStringHelper *Object_Name, con
     Instruction_End();
 }
 
-void Nextion_Display_Class::Add_Text(const __FlashStringHelper *Component_Name, const char *Data)
+void Nextion_Class::Add_Text(const __FlashStringHelper *Component_Name, const char *Data)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Component_Name);
@@ -463,7 +464,7 @@ void Nextion_Display_Class::Add_Text(const __FlashStringHelper *Component_Name, 
     Instruction_End();
 }
 
-void Nextion_Display_Class::Delete_Text(const __FlashStringHelper *Component_Name, uint8_t const &Quantity_To_Delete)
+void Nextion_Class::Delete_Text(const __FlashStringHelper *Component_Name, uint8_t const &Quantity_To_Delete)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Component_Name);
@@ -472,7 +473,7 @@ void Nextion_Display_Class::Delete_Text(const __FlashStringHelper *Component_Nam
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Value(const __FlashStringHelper *Object_Name, uint32_t const &Value)
+void Nextion_Class::Set_Value(const __FlashStringHelper *Object_Name, uint32_t const &Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -481,7 +482,7 @@ void Nextion_Display_Class::Set_Value(const __FlashStringHelper *Object_Name, ui
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Value(String const &Object_Name, uint32_t const &Value)
+void Nextion_Class::Set_Value(String const &Object_Name, uint32_t const &Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -490,7 +491,7 @@ void Nextion_Display_Class::Set_Value(String const &Object_Name, uint32_t const 
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Value(const char *Object_Name, uint32_t const &Value)
+void Nextion_Class::Set_Value(const char *Object_Name, uint32_t const &Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -499,7 +500,7 @@ void Nextion_Display_Class::Set_Value(const char *Object_Name, uint32_t const &V
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Global_Value(const __FlashStringHelper *Object_Name, uint32_t const &Value)
+void Nextion_Class::Set_Global_Value(const __FlashStringHelper *Object_Name, uint32_t const &Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -508,7 +509,7 @@ void Nextion_Display_Class::Set_Global_Value(const __FlashStringHelper *Object_N
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Font(const __FlashStringHelper *Object_Name, uint8_t const &Font_ID)
+void Nextion_Class::Set_Font(const __FlashStringHelper *Object_Name, uint8_t const &Font_ID)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
@@ -517,7 +518,7 @@ void Nextion_Display_Class::Set_Font(const __FlashStringHelper *Object_Name, uin
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Data_Scalling(const __FlashStringHelper *Object_Name, uint16_t const &Scale)
+void Nextion_Class::Set_Data_Scalling(const __FlashStringHelper *Object_Name, uint16_t const &Scale)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     if (Scale < 10 || Scale > 1000)
@@ -530,7 +531,7 @@ void Nextion_Display_Class::Set_Data_Scalling(const __FlashStringHelper *Object_
     Instruction_End();
 }
 
-void Nextion_Display_Class::Draw_Crop_Picture(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Picture_ID)
+void Nextion_Class::Draw_Crop_Picture(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Picture_ID)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("picq "));
@@ -546,7 +547,7 @@ void Nextion_Display_Class::Draw_Crop_Picture(uint16_t const &X_Coordinate, uint
     Instruction_End();
 }
 
-void Nextion_Display_Class::Draw_Text(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Font_ID, uint16_t const &Text_Color, uint16_t Backgroud, uint16_t const &Horizontal_Alignment, uint16_t const &Vertical_Alignment, uint16_t const &Background_Type, String const &Text)
+void Nextion_Class::Draw_Text(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Font_ID, uint16_t const &Text_Color, uint16_t Backgroud, uint16_t const &Horizontal_Alignment, uint16_t const &Vertical_Alignment, uint16_t const &Background_Type, String const &Text)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("xstr "));
@@ -576,7 +577,7 @@ void Nextion_Display_Class::Draw_Text(uint16_t const &X_Coordinate, uint16_t con
     Instruction_End();
 }
 
-void Nextion_Display_Class::Draw_Text(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Font_ID, uint16_t const &Text_Color, uint16_t Backgroud, uint16_t const &Horizontal_Alignment, uint16_t const &Vertical_Alignment, uint16_t const &Background_Type, const char *Text)
+void Nextion_Class::Draw_Text(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Font_ID, uint16_t const &Text_Color, uint16_t Backgroud, uint16_t const &Horizontal_Alignment, uint16_t const &Vertical_Alignment, uint16_t const &Background_Type, const char *Text)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("xstr "));
@@ -606,7 +607,7 @@ void Nextion_Display_Class::Draw_Text(uint16_t const &X_Coordinate, uint16_t con
     Instruction_End();
 }
 
-void Nextion_Display_Class::Draw_Picture(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Picture_ID)
+void Nextion_Class::Draw_Picture(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Picture_ID)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("pic "));
@@ -618,7 +619,7 @@ void Nextion_Display_Class::Draw_Picture(uint16_t const &X_Coordinate, uint16_t 
     Instruction_End();
 }
 
-void Nextion_Display_Class::Draw_Circle(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Radius, uint16_t const &Color, bool const &Hollow)
+void Nextion_Class::Draw_Circle(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Radius, uint16_t const &Color, bool const &Hollow)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     if (Hollow)
@@ -639,12 +640,12 @@ void Nextion_Display_Class::Draw_Circle(uint16_t const &X_Coordinate, uint16_t c
     Instruction_End();
 }
 
-void Nextion_Display_Class::Draw_Pixel(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Color)
+void Nextion_Class::Draw_Pixel(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Color)
 {
     Draw_Rectangle(X_Coordinate, Y_Coordinate, 1, 1, Color);
 }
 
-void Nextion_Display_Class::Draw_Rectangle(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Color, bool const &Hollow)
+void Nextion_Class::Draw_Rectangle(uint16_t const &X_Coordinate, uint16_t const &Y_Coordinate, uint16_t const &Width, uint16_t const &Height, uint16_t const &Color, bool const &Hollow)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     if (Hollow)
@@ -675,7 +676,7 @@ void Nextion_Display_Class::Draw_Rectangle(uint16_t const &X_Coordinate, uint16_
     Instruction_End();
 }
 
-void Nextion_Display_Class::Draw_Line(uint16_t const &X_Start, uint16_t const &Y_Start, uint16_t const &X_End, uint16_t const &Y_End, uint16_t const &Color)
+void Nextion_Class::Draw_Line(uint16_t const &X_Start, uint16_t const &Y_Start, uint16_t const &X_End, uint16_t const &Y_End, uint16_t const &Color)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("line "));
@@ -691,14 +692,14 @@ void Nextion_Display_Class::Draw_Line(uint16_t const &X_Start, uint16_t const &Y
     Instruction_End();
 }
 
-void Nextion_Display_Class::Calibrate()
+void Nextion_Class::Calibrate()
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("touch_j"));
     Instruction_End();
 }
 
-void Nextion_Display_Class::Show(const __FlashStringHelper *Object_Name)
+void Nextion_Class::Show(const __FlashStringHelper *Object_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("vis "));
@@ -708,7 +709,7 @@ void Nextion_Display_Class::Show(const __FlashStringHelper *Object_Name)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Show(String const &Object_Name)
+void Nextion_Class::Show(String const &Object_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("vis "));
@@ -717,7 +718,7 @@ void Nextion_Display_Class::Show(String const &Object_Name)
     Nextion_Serial.print("1");
     Instruction_End();
 }
-void Nextion_Display_Class::Show(const char *Object_Name)
+void Nextion_Class::Show(const char *Object_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("vis "));
@@ -727,7 +728,7 @@ void Nextion_Display_Class::Show(const char *Object_Name)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Hide(const __FlashStringHelper *Object_Name)
+void Nextion_Class::Hide(const __FlashStringHelper *Object_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("vis "));
@@ -737,7 +738,7 @@ void Nextion_Display_Class::Hide(const __FlashStringHelper *Object_Name)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Hide(String const &Object_Name)
+void Nextion_Class::Hide(String const &Object_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("vis "));
@@ -746,7 +747,7 @@ void Nextion_Display_Class::Hide(String const &Object_Name)
     Nextion_Serial.print("0");
     Instruction_End();
 }
-void Nextion_Display_Class::Hide(const char *Object_Name)
+void Nextion_Class::Hide(const char *Object_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("vis "));
@@ -756,7 +757,7 @@ void Nextion_Display_Class::Hide(const char *Object_Name)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Click(const __FlashStringHelper *Object_Name, uint8_t const &Event_Type)
+void Nextion_Class::Click(const __FlashStringHelper *Object_Name, uint8_t const &Event_Type)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("click "));
@@ -766,7 +767,7 @@ void Nextion_Display_Class::Click(const __FlashStringHelper *Object_Name, uint8_
     Instruction_End();
 }
 
-void Nextion_Display_Class::Click(const char *Object_Name, uint8_t const& Event_Type)
+void Nextion_Class::Click(const char *Object_Name, uint8_t const& Event_Type)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("click "));
@@ -776,7 +777,7 @@ void Nextion_Display_Class::Click(const char *Object_Name, uint8_t const& Event_
     Instruction_End();
 }
 
-void Nextion_Display_Class::Click(uint16_t const &Component_ID, uint8_t const& Event_Type)
+void Nextion_Class::Click(uint16_t const &Component_ID, uint8_t const& Event_Type)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("click "));
@@ -786,7 +787,7 @@ void Nextion_Display_Class::Click(uint16_t const &Component_ID, uint8_t const& E
     Instruction_End();
 }
 
-void Nextion_Display_Class::Add_Value_Waveform(uint8_t const &Component_ID, uint8_t const &Channel, uint8_t *Data, uint32_t const &Quantity)
+void Nextion_Class::Add_Value_Waveform(uint8_t const &Component_ID, uint8_t const &Channel, uint8_t *Data, uint32_t const &Quantity)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("add"));
@@ -814,7 +815,7 @@ void Nextion_Display_Class::Add_Value_Waveform(uint8_t const &Component_ID, uint
     }
 }
 
-void Nextion_Display_Class::Clear_Waveform(uint16_t const& Component_ID, uint8_t const& Channel)
+void Nextion_Class::Clear_Waveform(uint16_t const& Component_ID, uint8_t const& Channel)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("cle "));
@@ -824,14 +825,14 @@ void Nextion_Display_Class::Clear_Waveform(uint16_t const& Component_ID, uint8_t
     Instruction_End();
 }
 
-void Nextion_Display_Class::Reboot()
+void Nextion_Class::Reboot()
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("rest"));
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Standby_Serial_Timer(uint16_t const &Value)
+void Nextion_Class::Set_Standby_Serial_Timer(uint16_t const &Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("ussp="));
@@ -839,7 +840,7 @@ void Nextion_Display_Class::Set_Standby_Serial_Timer(uint16_t const &Value)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Standby_Touch_Timer(uint16_t const &Value)
+void Nextion_Class::Set_Standby_Touch_Timer(uint16_t const &Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("thsp="));
@@ -847,7 +848,7 @@ void Nextion_Display_Class::Set_Standby_Touch_Timer(uint16_t const &Value)
     Instruction_End();
 }
 
-uint8_t Nextion_Display_Class::Update(File Update_File)
+uint8_t Nextion_Class::Update(File Update_File)
 {
     Set_Brightness(100);
     Set_Standby_Serial_Timer(0);
@@ -936,21 +937,21 @@ uint8_t Nextion_Display_Class::Update(File Update_File)
 
 // Sleep & Wake up
 
-void Nextion_Display_Class::Sleep()
+void Nextion_Class::Sleep()
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("sleep=1"));
     Instruction_End();
 }
 
-void Nextion_Display_Class::Wake_Up()
+void Nextion_Class::Wake_Up()
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("sleep=0"));
     Instruction_End();
 }
 
-void Nextion_Display_Class::Get(const __FlashStringHelper *Object_Name)
+void Nextion_Class::Get(const __FlashStringHelper *Object_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("get "));
@@ -958,14 +959,14 @@ void Nextion_Display_Class::Get(const __FlashStringHelper *Object_Name)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Clear(uint16_t const &Color)
+void Nextion_Class::Clear(uint16_t const &Color)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("cls"));
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Draw_Color(uint16_t const &Color)
+void Nextion_Class::Set_Draw_Color(uint16_t const &Color)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("thc="));
@@ -973,7 +974,7 @@ void Nextion_Display_Class::Set_Draw_Color(uint16_t const &Color)
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Baud_Rate(uint32_t const &Baudrate, bool const &Save)
+void Nextion_Class::Set_Baud_Rate(uint32_t const &Baudrate, bool const &Save)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     if (Baudrate > 921000)
@@ -990,7 +991,7 @@ void Nextion_Display_Class::Set_Baud_Rate(uint32_t const &Baudrate, bool const &
     Instruction_End();
 }
 
-void Nextion_Display_Class::Set_Brightness(uint16_t const &Brightness, bool const &Save)
+void Nextion_Class::Set_Brightness(uint16_t const &Brightness, bool const &Save)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     if (Brightness > 100)
@@ -1007,13 +1008,13 @@ void Nextion_Display_Class::Set_Brightness(uint16_t const &Brightness, bool cons
     Instruction_End();
 }
 
-void Nextion_Display_Class::Instruction_End()
+void Nextion_Class::Instruction_End()
 {
     Nextion_Serial.print(F("\xFF\xFF\xFF"));
     xSemaphoreGive(Serial_Semaphore);
 }
 
-void Nextion_Display_Class::Argument_Separator()
+void Nextion_Class::Argument_Separator()
 {
     Nextion_Serial.print(F(","));
 }
