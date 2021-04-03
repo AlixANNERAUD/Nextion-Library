@@ -17,8 +17,6 @@
  * 
 */
 
-
-
 #ifndef NEXTION_LIBRARY_H_INCLUDED
 #define NEXTION_LIBRARY_H_INCLUDED
 
@@ -29,28 +27,10 @@
 
 class Nextion_Class
 {
-protected:
-    HardwareSerial Nextion_Serial;
-
-    SemaphoreHandle_t Serial_Semaphore;
-
-    void (*Callback_Function_String_Data)(const char *, uint8_t);
-    void (*Callback_Function_Numeric_Data)(uint32_t);
-    void (*Callback_Function_Event)(uint8_t);
-
-    uint16_t Cursor_X, Cursor_Y;
-
-    File Temporary_File;
-
-    uint16_t Adress;
-
-    inline void Instruction_End();
-    inline void Argument_Separator();
-
-    char Temporary_String[150];
-    uint8_t Return_Code;
-
 public:
+    Nextion_Class();
+    ~Nextion_Class();
+
     enum Errors
     {
         Invalid_Instruction = 0x00,
@@ -121,22 +101,22 @@ public:
     };
 
     uint8_t Page_History[5];
+    uint32_t Baud_Rate;
 
-    static Nextion_Class* Instance_Pointer;
+    static Nextion_Class *Instance_Pointer;
 
-    static void Default_Callback_Function_String_Data(const char*, uint8_t);
+    static void Default_Callback_Function_String_Data(const char *, uint8_t);
     static void Default_Callback_Function_Numeric_Data(uint32_t);
     static void Default_Callback_Function_Event(uint8_t);
-
-    //Class setup
-    Nextion_Class();
-    ~Nextion_Class();
 
     //
 
     void Purge();
 
-    void Begin(uint32_t Baud_Rate = 912600, uint8_t RX_Pin = 16, uint8_t TX_Pin = 17);
+    void Begin(uint32_t Baud_Rate = 921600, uint8_t RX_Pin = 16, uint8_t TX_Pin = 17);
+
+    uint8_t Get_Receive_Pin();
+    uint8_t Get_Send_Pin();
 
     void Set_Callback_Function_String_Data(void (*Function_Pointer)(const char *, uint8_t));
     void Set_Callback_Function_Numeric_Data(void (*Function_Pointer)(uint32_t));
@@ -168,19 +148,19 @@ public:
     void Set_Input_Type(const __FlashStringHelper *Object_Name, uint8_t const &Input_Type);
     void Set_Wordwrap(const __FlashStringHelper *Object_Name, bool const &Wordwrap);
 
-    void Set_Text(const __FlashStringHelper* Object_Name, char Value);
+    void Set_Text(const __FlashStringHelper *Object_Name, char Value);
     void Set_Text(const __FlashStringHelper *Object_Name, const __FlashStringHelper *Value);
     void Set_Text(const __FlashStringHelper *Object_Name, String const &Value, uint8_t const &Insert);
     void Set_Text(String const &Object_Name, String const &Value);
     void Set_Text(const __FlashStringHelper *Object_Name, const char *Value);
-    void Add_Text(const __FlashStringHelper* Component_Name, const char* Data);
-    void Delete_Text(const __FlashStringHelper* Component_Name, uint8_t const& Quantity_To_Delete);
+    void Add_Text(const __FlashStringHelper *Component_Name, const char *Data);
+    void Delete_Text(const __FlashStringHelper *Component_Name, uint8_t const &Quantity_To_Delete);
 
     void Set_Value(const __FlashStringHelper *Object_Name, uint32_t const &Value);
-    void Set_Value(String const& Object_Name, uint32_t const& Value);
-    void Set_Value(const char* Object_Name, uint32_t const& Value);
+    void Set_Value(String const &Object_Name, uint32_t const &Value);
+    void Set_Value(const char *Object_Name, uint32_t const &Value);
 
-    void Set_Global_Value(const __FlashStringHelper* Object_Name, uint32_t const& Value);
+    void Set_Global_Value(const __FlashStringHelper *Object_Name, uint32_t const &Value);
 
     void Set_Channel(const __FlashStringHelper *Object_Name, uint8_t const &Channel);
     void Set_Grid_Width(const __FlashStringHelper *Object_Name, uint16_t const &Width);
@@ -199,7 +179,6 @@ public:
     uint8_t &Get_Current_Page();
 
     void Set_Brightness(uint16_t const &Brightness, bool const &Save = false);
-    uint8_t Get_Backlight();
 
     void Set_Baud_Rate(uint32_t const &Baudrate, bool const &Save);
     void Set_Font_Spacing(uint16_t const &X_Spacing, uint16_t const &Y_Spacing);
@@ -209,17 +188,22 @@ public:
 
     void Set_Random_Generator(uint32_t const &Minimum, uint32_t const &Maximum);
 
-    void Set_Standby_Serial_Timer(uint16_t const& Value);
-    void Set_Standby_Touch_Timer(uint16_t const& Value);
-    void Set_Autowake(bool const &State);
+    void Set_Standby_Serial_Timer(uint16_t const &Value);
+    void Set_Standby_Touch_Timer(uint16_t const &Value);
+    
+    void Set_Serial_Wake_Up(bool Value);
+    void Set_Touch_Wake_Up(bool Value);
+
+    void Set_Wake_Up_Page(bool Value);
+
+    void Sleep();
+    void Wake_Up();
 
     void Set_Adress(uint16_t Adress);
     uint16_t Get_Adress();
 
     uint16_t Get_Free_Buffer();
 
-    void Sleep();
-    void Wake_Up();
 
     void Set_Debugging(uint8_t Level);
 
@@ -233,20 +217,20 @@ public:
     void Write(int Data);
     void Send_Raw(const __FlashStringHelper *Data);
     void Send_Raw(String const &Data);
-    void Send_Raw(const char* Data);
+    void Send_Raw(const char *Data);
 
     //Command
 
     void Clear(uint16_t const &Color);
     void Refresh(uint16_t const &Component_ID);
-    void Refresh(const __FlashStringHelper* Object_Name);
+    void Refresh(const __FlashStringHelper *Object_Name);
     void Delay(uint16_t Delay_Time);
     void Click(uint16_t const &Component_ID, uint8_t const &Event_Type);
-    void Click(const __FlashStringHelper* Object_Name, uint8_t const& Event_Type);
-    void Click(const char* Object_Name, uint8_t const& Event_Type);
+    void Click(const __FlashStringHelper *Object_Name, uint8_t const &Event_Type);
+    void Click(const char *Object_Name, uint8_t const &Event_Type);
     void Start_Waveform_Refresh();
     void Stop_Waveform_Refresh();
-    void Add_Value_Waveform(uint8_t const &Component_ID, uint8_t const &Channel, uint8_t* Data, uint32_t const &Quantity = 0);
+    void Add_Value_Waveform(uint8_t const &Component_ID, uint8_t const &Channel, uint8_t *Data, uint32_t const &Quantity = 0);
     void Clear_Waveform(uint16_t const &Component_ID, uint8_t const &Channel);
     void Get(const __FlashStringHelper *Object_Name);
     void Calibrate();
@@ -266,7 +250,36 @@ public:
     uint8_t Update(File Update_File);
 
     void Loop();
-};
 
+private:
+    HardwareSerial Nextion_Serial;
+
+    SemaphoreHandle_t Serial_Semaphore;
+
+    void (*Callback_Function_String_Data)(const char *, uint8_t);
+    void (*Callback_Function_Numeric_Data)(uint32_t);
+    void (*Callback_Function_Event)(uint8_t);
+
+    uint16_t Cursor_X, Cursor_Y;
+
+    File Temporary_File;
+
+    uint16_t Adress;
+
+    inline void Instruction_End()
+    {
+        Nextion_Serial.write(0xFF);
+        Nextion_Serial.write(0xFF);
+        Nextion_Serial.write(0xFF);
+        xSemaphoreGive(Serial_Semaphore);
+    }
+    inline void Argument_Separator()
+    {
+        Nextion_Serial.write(',');
+    }
+
+    char Temporary_String[150];
+    uint8_t Return_Code;
+};
 
 #endif

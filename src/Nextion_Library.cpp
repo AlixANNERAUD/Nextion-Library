@@ -22,9 +22,9 @@
 Nextion_Class *Nextion_Class::Instance_Pointer = NULL;
 
 Nextion_Class::Nextion_Class() : Nextion_Serial(1),
-                                                 Callback_Function_String_Data(Default_Callback_Function_String_Data),
-                                                 Callback_Function_Numeric_Data(Default_Callback_Function_Numeric_Data),
-                                                 Callback_Function_Event(Default_Callback_Function_Event)
+                                 Callback_Function_String_Data(Default_Callback_Function_String_Data),
+                                 Callback_Function_Numeric_Data(Default_Callback_Function_Numeric_Data),
+                                 Callback_Function_Event(Default_Callback_Function_Event)
 
 {
     if (Instance_Pointer != NULL)
@@ -56,9 +56,10 @@ Nextion_Class::~Nextion_Class()
 
 void Nextion_Class::Begin(uint32_t Baud_Rate, uint8_t RX_Pin, uint8_t TX_Pin)
 {
+    this->Baud_Rate = Baud_Rate;
     Nextion_Serial.begin(Baud_Rate, SERIAL_8N1, RX_Pin, TX_Pin); //Nextion UART
     Nextion_Serial.print("DRAKJHSUYDGBNCJHGJKSHBDN");            // exit transparent mode and clear last send command
-    Instruction_End();                                          
+    Instruction_End();
 }
 
 void Nextion_Class::Set_Callback_Function_String_Data(void (*Function_Pointer)(const char *, uint8_t))
@@ -767,7 +768,7 @@ void Nextion_Class::Click(const __FlashStringHelper *Object_Name, uint8_t const 
     Instruction_End();
 }
 
-void Nextion_Class::Click(const char *Object_Name, uint8_t const& Event_Type)
+void Nextion_Class::Click(const char *Object_Name, uint8_t const &Event_Type)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("click "));
@@ -777,7 +778,7 @@ void Nextion_Class::Click(const char *Object_Name, uint8_t const& Event_Type)
     Instruction_End();
 }
 
-void Nextion_Class::Click(uint16_t const &Component_ID, uint8_t const& Event_Type)
+void Nextion_Class::Click(uint16_t const &Component_ID, uint8_t const &Event_Type)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("click "));
@@ -812,10 +813,12 @@ void Nextion_Class::Add_Value_Waveform(uint8_t const &Component_ID, uint8_t cons
         Nextion_Serial.print(F("\xFF\xFF\xFF"));
         vTaskDelay(pdMS_TO_TICKS(10)); //wait display to prepare transparent mode
         Nextion_Serial.write(Data, Quantity);
+        Nextion_Serial.print(F("DRAKJHSUYDGBNCJHGJKSHBDN")); // ensure that display is not in transparent mode anymore
+        Instruction_End();
     }
 }
 
-void Nextion_Class::Clear_Waveform(uint16_t const& Component_ID, uint8_t const& Channel)
+void Nextion_Class::Clear_Waveform(uint16_t const &Component_ID, uint8_t const &Channel)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("cle "));
@@ -848,20 +851,48 @@ void Nextion_Class::Set_Standby_Touch_Timer(uint16_t const &Value)
     Instruction_End();
 }
 
+void Nextion_Class::Set_Touch_Wake_Up(bool Value)
+{
+    xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+    Nextion_Serial.print(F("usup="));
+    Nextion_Serial.print(Value);
+    Instruction_End();
+}
+
+void Nextion_Class::Set_Serial_Wake_Up(bool Value)
+{
+    xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+    Nextion_Serial.print(F("thup="));
+    Nextion_Serial.print(Value);
+    Instruction_End();
+}
+
+void Nextion_Class::Set_Wake_Up_Page(uint8_t Page_ID)
+{
+    xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+    Nextion_Serial.print(F("wup="));
+    Nextion_Serial.print(Page_ID);
+    Instruction_End();
+}
+
 uint8_t Nextion_Class::Update(File Update_File)
 {
+    if (!Update_File || Update_File.isDirectory())
+    {
+        return Update_Failed;
+    }
     Set_Brightness(100);
     Set_Standby_Serial_Timer(0);
     Set_Standby_Touch_Timer(0);
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
-    while (Nextion_Serial.available())   //clear serial buffer
+    while (Nextion_Serial.available()) //clear serial buffer
     {
         Nextion_Serial.read();
     }
-    Nextion_Serial.print(F("ÿÿÿ")); // ensure that last instruction is cleared
-    Nextion_Serial.print(F("DRAKJHSUYDGBNCJHGJKSHBDNÿÿÿ"));
-    Nextion_Serial.print(F("connectÿÿÿ"));
-
+    Nextion_Serial.print(F("DRAKJHSUYDGBNCJHGJKSHBDN\xFF\xFF\xFF"));
+    Nextion_Serial.print(F("\x00\xFF\xFF\xFF")); // ensure that last instruction is cleared
+    Nextion_Serial.print(F("connect\xFF\xFF\xFF"));
+    Nextion_Serial.print(F("\xFF\xFF connect\xFF\xFF\xFF"));
     byte i = 0;
     while (Nextion_Serial.available() == 0)
     {
@@ -873,33 +904,32 @@ uint8_t Nextion_Class::Update(File Update_File)
             return Update_Failed;
         }
     }
-    char Temporary_String[5] = "";
-    Nextion_Serial.readBytes(Temporary_String, sizeof(Temporary_String));
+    char Temporary_String[6] = "";
+    memset(Temporary_String, '\0', sizeof(Temporary_String));
+    Nextion_Serial.readBytes(Temporary_String, 5);
     if (memcmp(Temporary_String, "comok", sizeof(Temporary_String)) != 0)
     {
         return Update_Failed;
     }
+    vTaskDelay(pdMS_TO_TICKS(10));
     while (Nextion_Serial.available())
     {
         Nextion_Serial.read();
     }
-
+    Nextion_Serial.print("runmod=2\xFF\xFF\xFF");
     size_t Size = Update_File.size();
-
     Nextion_Serial.print(F("whmi-wri "));
     Nextion_Serial.print(Size);
     Argument_Separator();
-    Nextion_Serial.print(F("921600"));
+    Nextion_Serial.print(Baud_Rate);
     Argument_Separator();
-    Nextion_Serial.print(F("res0"));
-    Instruction_End();
-
-    char Temporary_Buffer[4097];
-    memset(Temporary_Buffer, 0, sizeof(Temporary_Buffer));
-
+    Nextion_Serial.print(F("0\xFF\xFF\xFF"));
+    char Temporary_Buffer[4096];
+    memset(Temporary_Buffer, '\0', sizeof(Temporary_Buffer));
     while (Update_File.available() >= 4096)
     {
-        Update_File.readBytes(Temporary_Buffer, 4096);
+        Update_File.readBytes(Temporary_Buffer, sizeof(Temporary_Buffer));
+
         while (Nextion_Serial.available() == 0)
         {
             vTaskDelay(pdMS_TO_TICKS(5));
@@ -909,10 +939,11 @@ uint8_t Nextion_Class::Update(File Update_File)
             //error - unexpected return number
             return Update_Failed;
         }
-        Nextion_Serial.print(Temporary_Buffer);
+        Nextion_Serial.write(Temporary_Buffer, sizeof(Temporary_Buffer));
     }
-    memset(Temporary_Buffer, 0, sizeof(Temporary_Buffer));
-    Update_File.readBytes(Temporary_Buffer, Update_File.available());
+    memset(Temporary_Buffer, '\0', sizeof(Temporary_Buffer));
+    uint16_t Remaining_Bytes = Update_File.available();
+    Update_File.readBytes(Temporary_Buffer, Remaining_Bytes);
     while (Nextion_Serial.available() == 0)
     {
         vTaskDelay(pdMS_TO_TICKS(5));
@@ -922,7 +953,7 @@ uint8_t Nextion_Class::Update(File Update_File)
         //error - unexpected return number
         return Update_Failed;
     }
-    Nextion_Serial.print(Temporary_Buffer);
+    Nextion_Serial.write(Temporary_Buffer, Remaining_Bytes);
     while (Nextion_Serial.available() == 0)
     {
         vTaskDelay(pdMS_TO_TICKS(5));
@@ -998,6 +1029,7 @@ void Nextion_Class::Set_Brightness(uint16_t const &Brightness, bool const &Save)
     {
         return;
     }
+
     Nextion_Serial.print(F("dim"));
     if (Save)
     {
@@ -1006,15 +1038,4 @@ void Nextion_Class::Set_Brightness(uint16_t const &Brightness, bool const &Save)
     Nextion_Serial.print(F("="));
     Nextion_Serial.print(Brightness);
     Instruction_End();
-}
-
-void Nextion_Class::Instruction_End()
-{
-    Nextion_Serial.print(F("\xFF\xFF\xFF"));
-    xSemaphoreGive(Serial_Semaphore);
-}
-
-void Nextion_Class::Argument_Separator()
-{
-    Nextion_Serial.print(F(","));
 }
