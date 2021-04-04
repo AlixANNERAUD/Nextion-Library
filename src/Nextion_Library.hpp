@@ -145,15 +145,19 @@ public:
     void Set_Font_Color(const __FlashStringHelper *Object_Name, uint16_t const &Color, int8_t Type = -1);
     void Set_Horizontal_Alignment(const __FlashStringHelper *Object_Name, uint8_t const &Horizontal_Alignment);
     void Set_Vertical_Alignment(const __FlashStringHelper *Object_Name, uint8_t const &Set_Vertical_Alignment);
-    void Set_Input_Type(const __FlashStringHelper *Object_Name, uint8_t const &Input_Type);
+    void Set_Mask(const __FlashStringHelper *Object_Name, bool Masked);
     void Set_Wordwrap(const __FlashStringHelper *Object_Name, bool const &Wordwrap);
 
     void Set_Text(const __FlashStringHelper *Object_Name, char Value);
     void Set_Text(const __FlashStringHelper *Object_Name, const __FlashStringHelper *Value);
     void Set_Text(const __FlashStringHelper *Object_Name, String const &Value, uint8_t const &Insert);
     void Set_Text(String const &Object_Name, String const &Value);
+    void Set_Text(const char* Object_Name, const char* Value);
     void Set_Text(const __FlashStringHelper *Object_Name, const char *Value);
+
     void Add_Text(const __FlashStringHelper *Component_Name, const char *Data);
+    void Add_Text(const __FlashStringHelper *Object_Name, char Data);
+    
     void Delete_Text(const __FlashStringHelper *Component_Name, uint8_t const &Quantity_To_Delete);
 
     void Set_Value(const __FlashStringHelper *Object_Name, uint32_t const &Value);

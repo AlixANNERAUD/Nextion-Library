@@ -162,7 +162,7 @@ void Nextion_Class::Loop() //Parsing incomming data
             break;
 
         case Touch_Event:
-        
+
             // -- Unhandled yet
             break;
 
@@ -429,12 +429,12 @@ void Nextion_Class::Set_Font_Color(const __FlashStringHelper *Object_Name, uint1
     Instruction_End();
 }
 
-void Nextion_Class::Set_Input_Type(const __FlashStringHelper *Object_Name, uint8_t const &Input_Type)
+void Nextion_Class::Set_Mask(const __FlashStringHelper *Object_Name, bool Masked)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
     Nextion_Serial.print(F(".pw="));
-    Nextion_Serial.write(Input_Type);
+    Nextion_Serial.write(Masked);
     Instruction_End();
 }
 
@@ -444,7 +444,7 @@ void Nextion_Class::Set_Text(const __FlashStringHelper *Object_Name, char Value)
     Nextion_Serial.print(Object_Name);
     Nextion_Serial.print(F(".txt=\""));
     Nextion_Serial.print(Value);
-    Nextion_Serial.print(F("\""));
+    Nextion_Serial.print('\"');
     Instruction_End();
 }
 
@@ -454,7 +454,7 @@ void Nextion_Class::Set_Text(const __FlashStringHelper *Object_Name, const __Fla
     Nextion_Serial.print(Object_Name);
     Nextion_Serial.print(F(".txt=\""));
     Nextion_Serial.print(Value);
-    Nextion_Serial.print(F("\""));
+    Nextion_Serial.print('\"');
     Instruction_End();
 }
 
@@ -464,7 +464,7 @@ void Nextion_Class::Set_Text(String const &Object_Name, String const &Value)
     Nextion_Serial.print(Object_Name);
     Nextion_Serial.print(F(".txt=\""));
     Nextion_Serial.print(Value);
-    Nextion_Serial.print(F("\""));
+    Nextion_Serial.print('\"');
     Instruction_End();
 }
 
@@ -473,9 +473,51 @@ void Nextion_Class::Set_Text(const __FlashStringHelper *Object_Name, const char 
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
     Nextion_Serial.print(F(".txt=\""));
-    Nextion_Serial.print(Value);
-    Nextion_Serial.print(F("\""));
-    Instruction_End();
+    uint16_t i = 0;
+    while (1)
+    {
+        switch (Value[i])
+        {
+        case '\"':
+            Nextion_Serial.write('\\');
+            Nextion_Serial.write('\"');
+            break;
+        case '\0':
+            Nextion_Serial.write('\"');
+            Instruction_End();
+            return;
+        default:
+            Nextion_Serial.write(Value[i]);
+            break;
+        }
+        i++;
+    }
+}
+
+void Nextion_Class::Set_Text(const char *Object_Name, const char *Value)
+{
+    xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+    Nextion_Serial.print(Object_Name);
+    Nextion_Serial.print(F(".txt=\""));
+    uint16_t i = 0;
+    while (1)
+    {
+        switch (Value[i])
+        {
+        case '\"':
+            Nextion_Serial.write('\\');
+            Nextion_Serial.write('\"');
+            break;
+        case '\0':
+            Nextion_Serial.write('\"');
+            Instruction_End();
+            return;
+        default:
+            Nextion_Serial.write(Value[i]);
+            break;
+        }
+        i++;
+    }
 }
 
 void Nextion_Class::Add_Text(const __FlashStringHelper *Component_Name, const char *Data)
@@ -483,8 +525,38 @@ void Nextion_Class::Add_Text(const __FlashStringHelper *Component_Name, const ch
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Component_Name);
     Nextion_Serial.print(F(".txt+=\""));
-    Nextion_Serial.print(Data);
-    Nextion_Serial.print(F("\""));
+    uint16_t i = 0;
+    while (1)
+    {
+        switch (Data[i])
+        {
+        case '\"':
+            Nextion_Serial.write('\\');
+            Nextion_Serial.write('\"');
+            break;
+        case '\0':
+            Nextion_Serial.print('\"');
+            Instruction_End();
+            return;
+        default:
+            Nextion_Serial.write(Data[i]);
+            break;
+        }
+        i++;
+    }
+}
+
+void Nextion_Class::Add_Text(const __FlashStringHelper *Object_Name, char Value)
+{
+    xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+    Nextion_Serial.print(Object_Name);
+    Nextion_Serial.print(F(".txt+=\""));
+    if (Value == '\"')
+    {
+        Nextion_Serial.write('\\');
+    }
+    Nextion_Serial.write(Value);
+    Nextion_Serial.write('\"');
     Instruction_End();
 }
 
@@ -595,9 +667,9 @@ void Nextion_Class::Draw_Text(uint16_t const &X_Coordinate, uint16_t const &Y_Co
     Argument_Separator();
     Nextion_Serial.print(Background_Type);
     Argument_Separator();
-    Nextion_Serial.print(F("\""));
+    Nextion_Serial.print('\"');
     Nextion_Serial.print(Text);
-    Nextion_Serial.print(F("\""));
+    Nextion_Serial.print('\"');
     Instruction_End();
 }
 
@@ -625,9 +697,9 @@ void Nextion_Class::Draw_Text(uint16_t const &X_Coordinate, uint16_t const &Y_Co
     Argument_Separator();
     Nextion_Serial.print(Background_Type);
     Argument_Separator();
-    Nextion_Serial.print(F("\""));
+    Nextion_Serial.print('\"');
     Nextion_Serial.print(Text);
-    Nextion_Serial.print(F("\""));
+    Nextion_Serial.print('\"');
     Instruction_End();
 }
 
