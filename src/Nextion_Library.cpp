@@ -140,7 +140,29 @@ void Nextion_Class::Loop() //Parsing incomming data
 
             break;
 
+        case Touch_Coordinate_Awake:
+        case Touch_Coordinate_Sleep:
+            Nextion_Serial.readBytes((char *)Temporary_String, 5);
+            if (Temporary_String[4] == 01)
+            {
+                X_Press = Temporary_String[0] << 8 | Temporary_String[1];
+                Y_Press = Temporary_String[2] << 8 | Temporary_String[3];
+                Callback_Function_Event(Return_Code);
+            }
+            else if (Temporary_String[4] == 00)
+            {
+                X_Release = Temporary_String[0] << 8 | Temporary_String[1];
+                Y_Release = Temporary_String[2] << 8 | Temporary_String[3];
+                Callback_Function_Event(Return_Code);
+            }
+            else
+            {
+                Purge();
+            }
+            break;
+
         case Touch_Event:
+        
             // -- Unhandled yet
             break;
 
@@ -211,7 +233,8 @@ void Nextion_Class::Loop() //Parsing incomming data
             }
 
         default:
-            Verbose_Print_Line("Unrecognized nextion message");
+            Verbose_Print_Line("Unrecognized nextion message : ");
+            Serial.print(Return_Code, HEX);
             Purge();
             Callback_Function_Event(Return_Code);
             break;
@@ -881,9 +904,11 @@ uint8_t Nextion_Class::Update(File Update_File)
     {
         return Update_Failed;
     }
+
     Set_Brightness(100);
     Set_Standby_Serial_Timer(0);
     Set_Standby_Touch_Timer(0);
+
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     while (Nextion_Serial.available()) //clear serial buffer
     {

@@ -246,6 +246,7 @@ public:
     void Resume_Execution();
     void Refresh_Current_Page();
 
+
     void Reboot();
     uint8_t Update(File Update_File);
 
@@ -261,6 +262,8 @@ private:
     void (*Callback_Function_Event)(uint8_t);
 
     uint16_t Cursor_X, Cursor_Y;
+
+    uint16_t X_Press, X_Release, Y_Press, Y_Release;
 
     File Temporary_File;
 
