@@ -482,8 +482,9 @@ void Nextion_Class::Set_Text(const __FlashStringHelper *Object_Name, const char 
             Nextion_Serial.write('\\');
             Nextion_Serial.write('\"');
             break;
-        case '\0':
-            Nextion_Serial.write('\"');
+        case '\\':
+            Nextion_Serial.write('\\');
+            Nextion_S case '\0' : Nextion_Serial.write('\"');
             Instruction_End();
             return;
         default:
@@ -508,8 +509,9 @@ void Nextion_Class::Set_Text(const char *Object_Name, const char *Value)
             Nextion_Serial.write('\\');
             Nextion_Serial.write('\"');
             break;
-        case '\0':
-            Nextion_Serial.write('\"');
+        case '\\':
+            Nextion_Serial.write('\\');
+            Nextion_S case '\0' : Nextion_Serial.write('\"');
             Instruction_End();
             return;
         default:
@@ -534,6 +536,10 @@ void Nextion_Class::Add_Text(const __FlashStringHelper *Component_Name, const ch
             Nextion_Serial.write('\\');
             Nextion_Serial.write('\"');
             break;
+        case '\\':
+            Nextion_Serial.write('\\');
+            Nextion_Serial.write('\\');
+            break;
         case '\0':
             Nextion_Serial.print('\"');
             Instruction_End();
@@ -551,11 +557,22 @@ void Nextion_Class::Add_Text(const __FlashStringHelper *Object_Name, char Value)
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
     Nextion_Serial.print(F(".txt+=\""));
-    if (Value == '\"')
+    switch (Value)
     {
+    case '\"':
         Nextion_Serial.write('\\');
+        Nextion_Serial.write('\"');
+        break;
+    case '\\':
+        Nextion_Serial.write('\\');
+        Nextion_Serial.write('\\');
+        break;
+    case '\0':
+        break;
+    default:
+        Nextion_Serial.write(Value);
+        break;
     }
-    Nextion_Serial.write(Value);
     Nextion_Serial.write('\"');
     Instruction_End();
 }
