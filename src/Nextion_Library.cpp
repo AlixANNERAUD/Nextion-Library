@@ -484,7 +484,9 @@ void Nextion_Class::Set_Text(const __FlashStringHelper *Object_Name, const char 
             break;
         case '\\':
             Nextion_Serial.write('\\');
-            Nextion_S case '\0' : Nextion_Serial.write('\"');
+            Nextion_Serial.write('\\');
+        case '\0':
+            Nextion_Serial.write('\"');
             Instruction_End();
             return;
         default:
@@ -511,7 +513,9 @@ void Nextion_Class::Set_Text(const char *Object_Name, const char *Value)
             break;
         case '\\':
             Nextion_Serial.write('\\');
-            Nextion_S case '\0' : Nextion_Serial.write('\"');
+            Nextion_Serial.write('\\');
+        case '\0':
+            Nextion_Serial.write('\"');
             Instruction_End();
             return;
         default:
@@ -609,6 +613,24 @@ void Nextion_Class::Set_Value(const char *Object_Name, uint32_t const &Value)
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
     Nextion_Serial.print(F(".val="));
+    Nextion_Serial.print(Value);
+    Instruction_End();
+}
+
+void Nextion_Class::Set_Maximum_Value(const __FlashStringHelper *Object_Name, uint16_t const &Value)
+{
+    xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+    Nextion_Serial.print(Object_Name);
+    Nextion_Serial.print(F(".maxval="));
+    Nextion_Serial.print(Value);
+    Instruction_End();
+}
+
+void Nextion_Class::Set_Minimum_Value(const __FlashStringHelper *Object_Name, uint16_t const &Value)
+{
+    xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+    Nextion_Serial.print(Object_Name);
+    Nextion_Serial.print(F(".minval="));
     Nextion_Serial.print(Value);
     Instruction_End();
 }
@@ -966,7 +988,7 @@ void Nextion_Class::Set_Standby_Touch_Timer(uint16_t const &Value)
 void Nextion_Class::Set_Touch_Wake_Up(bool Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
-    Nextion_Serial.print(F("usup="));
+    Nextion_Serial.print(F("thup="));
     Nextion_Serial.print(Value);
     Instruction_End();
 }
@@ -974,7 +996,7 @@ void Nextion_Class::Set_Touch_Wake_Up(bool Value)
 void Nextion_Class::Set_Serial_Wake_Up(bool Value)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
-    Nextion_Serial.print(F("thup="));
+    Nextion_Serial.print(F("usup="));
     Nextion_Serial.print(Value);
     Instruction_End();
 }

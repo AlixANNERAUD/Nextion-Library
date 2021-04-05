@@ -157,8 +157,12 @@ public:
 
     void Add_Text(const __FlashStringHelper *Component_Name, const char *Data);
     void Add_Text(const __FlashStringHelper *Object_Name, char Data);
-    
+
     void Delete_Text(const __FlashStringHelper *Component_Name, uint8_t const &Quantity_To_Delete);
+
+    void Set_Maximum_Value(const __FlashStringHelper* Object_Name, uint16_t const& Value);
+    
+    void Set_Minimum_Value(const __FlashStringHelper* Object_Name, uint16_t const& Value);
 
     void Set_Value(const __FlashStringHelper *Object_Name, uint32_t const &Value);
     void Set_Value(String const &Object_Name, uint32_t const &Value);
