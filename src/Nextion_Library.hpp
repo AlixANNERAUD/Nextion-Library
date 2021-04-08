@@ -260,7 +260,10 @@ public:
 
     void Loop();
 
-private:
+    void Set_Semaphore_Timeout(uint32_t);
+    void Get_Semaphore_Timeout(uint32_t);
+
+protected:
     HardwareSerial Nextion_Serial;
 
     SemaphoreHandle_t Serial_Semaphore;

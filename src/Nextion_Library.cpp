@@ -155,10 +155,7 @@ void Nextion_Class::Loop() //Parsing incomming data
                 Y_Release = Temporary_String[2] << 8 | Temporary_String[3];
                 Callback_Function_Event(Return_Code);
             }
-            else
-            {
-                Purge();
-            }
+            Purge();
             break;
 
         case Touch_Event:
@@ -233,8 +230,8 @@ void Nextion_Class::Loop() //Parsing incomming data
             }
 
         default:
-            Verbose_Print_Line("Unrecognized nextion message : ");
-            Serial.print(Return_Code, HEX);
+            Verbose_Print("Unrecognized nextion message : ");
+            Serial.println(Return_Code, HEX);
             Purge();
             Callback_Function_Event(Return_Code);
             break;
@@ -443,7 +440,22 @@ void Nextion_Class::Set_Text(const __FlashStringHelper *Object_Name, char Value)
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
     Nextion_Serial.print(F(".txt=\""));
-    Nextion_Serial.print(Value);
+    switch (Value)
+    {
+    case '\"':
+        Nextion_Serial.write('\\');
+        Nextion_Serial.write('\"');
+        break;
+    case '\\':
+        Nextion_Serial.write('\\');
+        Nextion_Serial.write('\\');
+        break;
+    case '\0':
+        break;
+    default:
+        Nextion_Serial.write(Value);
+        break;
+    }
     Nextion_Serial.print('\"');
     Instruction_End();
 }
