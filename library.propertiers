@@ -1,0 +1,9 @@
+name=Nextion Library
+version=0.1.0
+author=Alix ANNERAUD <alix.anneraud@outlook.fr>
+maintainer=Alix ANNERAUD <alix.anneraud@outlook.fr>
+sentence=With this library you can use Nextion displays.
+paragraph=Change attributes, receive message, change states etc.
+category=Display
+url=https://github.com/AlixANNERAUD/Nextion-Library
+architectures=esp32
