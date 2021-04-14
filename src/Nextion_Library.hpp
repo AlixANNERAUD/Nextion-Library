@@ -15,6 +15,7 @@
 #include "HardwareSerial.h"
 #include "FS.h"
 #include "Configuration.hpp"
+#include "ArduinoTrace.h"
 
 class Nextion_Class
 {
@@ -179,7 +180,10 @@ public:
 
     void Set_Brightness(uint16_t const &Brightness, bool const &Save = false);
 
-    void Set_Baud_Rate(uint32_t const &Baudrate, bool const &Save);
+    void Set_Display_Baud_Rate(uint32_t const &Baud_Rate, bool const &Save);
+
+    void Set_Baud_Rate(uint32_t const& Baud_Rate);
+
     void Set_Font_Spacing(uint16_t const &X_Spacing, uint16_t const &Y_Spacing);
 
     void Set_Draw_Color(uint16_t const &Color);

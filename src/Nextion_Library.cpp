@@ -1,12 +1,12 @@
 ///
- /// @file Nextion_Library.cpp
- /// @author Alix ANNERAUD (alix.anneraud@outlook.fr)
- /// @brief Nextion display library source file.
- /// @version 0.1.0
- /// @date 21-05-2020
- /// 
- /// @copyright Copyright (c) 2021
- /// 
+/// @file Nextion_Library.cpp
+/// @author Alix ANNERAUD (alix.anneraud@outlook.fr)
+/// @brief Nextion display library source file.
+/// @version 0.1.0
+/// @date 21-05-2020
+///
+/// @copyright Copyright (c) 2021
+///
 
 #include "Nextion_Library.hpp"
 
@@ -114,7 +114,7 @@ void Nextion_Class::Loop() //Parsing incomming data
             {
                 if (Temporary_String[0] != Page_History[0])
                 {
-                    Page_History[5] = Page_History[4];
+                    Page_History[4] = Page_History[3];
                     Page_History[3] = Page_History[2];
                     Page_History[2] = Page_History[1];
                     Page_History[1] = Page_History[0];
@@ -1018,89 +1018,112 @@ uint8_t Nextion_Class::Update(File Update_File)
         return Update_Failed;
     }
 
-    Set_Brightness(100);
-    Set_Standby_Serial_Timer(0);
-    Set_Standby_Touch_Timer(0);
-
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+
+    vTaskDelay(pdMS_TO_TICKS(250));
+
     while (Nextion_Serial.available()) //clear serial buffer
     {
+
         Nextion_Serial.read();
     }
+
     Nextion_Serial.print(F("DRAKJHSUYDGBNCJHGJKSHBDN\xFF\xFF\xFF"));
-    Nextion_Serial.print(F("\x00\xFF\xFF\xFF")); // ensure that last instruction is cleared
-    Nextion_Serial.print(F("connect\xFF\xFF\xFF"));
-    Nextion_Serial.print(F("\xFF\xFF connect\xFF\xFF\xFF"));
-    byte i = 0;
-    while (Nextion_Serial.available() == 0)
+
+    uint32_t Timeout;
+
+    uint8_t i;
+
+    const uint32_t Baud_Rate[] = {2400, 4800, 9600, 19200, 31250, 38400, 57600, 115200, 230400, 250000, 256000, 921600};
+
+    for (i = 0; i <= 12; i++)
     {
-        vTaskDelay(pdMS_TO_TICKS(100));
-        i++;
-        if (i > 50)
+        if (i == 12)
         {
-            //error handle : no reply from screen
             return Update_Failed;
         }
+        Nextion_Serial.updateBaudRate(Baud_Rate[i]);
+
+        Nextion_Serial.print(F("\xFF\xFF\xFF")); // ensure that last instruction is cleared
+        Nextion_Serial.print(F("connect\xFF\xFF\xFF"));
+
+        Timeout = millis() + ((1000000 / Baud_Rate[i]) + 30);
+        while (millis() <= Timeout)
+        {
+        }
+
+        char Temporary_String[5];
+        Nextion_Serial.readBytes(Temporary_String, 5);
+        if (memcmp(Temporary_String, "comok", sizeof(Temporary_String)) == 0)
+        {
+            while (Nextion_Serial.available())
+            {
+                Nextion_Serial.read();
+                vTaskDelay(pdMS_TO_TICKS(1));
+            }
+            break;
+        }
     }
-    char Temporary_String[6] = "";
-    memset(Temporary_String, '\0', sizeof(Temporary_String));
-    Nextion_Serial.readBytes(Temporary_String, 5);
-    if (memcmp(Temporary_String, "comok", sizeof(Temporary_String)) != 0)
-    {
-        return Update_Failed;
-    }
-    vTaskDelay(pdMS_TO_TICKS(10));
-    while (Nextion_Serial.available())
-    {
-        Nextion_Serial.read();
-    }
-    Nextion_Serial.print("runmod=2\xFF\xFF\xFF");
-    size_t Size = Update_File.size();
+
+    Nextion_Serial.print(F("dim=100\xFF\xFF\xFF"));
+    Nextion_Serial.print(F("ussp=0\xFF\xFF\xFF"));
+    Nextion_Serial.print(F("thsp=0\xFF\xFF\xFF"));
+
     Nextion_Serial.print(F("whmi-wri "));
-    Nextion_Serial.print(Size);
+    Nextion_Serial.print(Update_File.size());
     Argument_Separator();
-    Nextion_Serial.print(Baud_Rate);
+    Nextion_Serial.print(Baud_Rate[i]);
     Argument_Separator();
     Nextion_Serial.print(F("0\xFF\xFF\xFF"));
+
     char Temporary_Buffer[4096];
     memset(Temporary_Buffer, '\0', sizeof(Temporary_Buffer));
+
     while (Update_File.available() >= 4096)
     {
-        Update_File.readBytes(Temporary_Buffer, sizeof(Temporary_Buffer));
-
-        while (Nextion_Serial.available() == 0)
+        if (Update_File.readBytes(Temporary_Buffer, sizeof(Temporary_Buffer)) != 4096)
         {
-            vTaskDelay(pdMS_TO_TICKS(5));
-        }
-        if (Nextion_Serial.read() != 0x05)
-        {
-            //error - unexpected return number
             return Update_Failed;
         }
+
+        Timeout = millis() + 3000;
+        while (Nextion_Serial.read() != 0x05)
+        {
+            if (millis() > Timeout)
+            {
+                return Update_Failed;
+            }
+        }
+
         Nextion_Serial.write(Temporary_Buffer, sizeof(Temporary_Buffer));
     }
+
     memset(Temporary_Buffer, '\0', sizeof(Temporary_Buffer));
+
     uint16_t Remaining_Bytes = Update_File.available();
+    
     Update_File.readBytes(Temporary_Buffer, Remaining_Bytes);
-    while (Nextion_Serial.available() == 0)
+
+    Timeout = millis() + 3000;
+    while (Nextion_Serial.read() != 0x05)
     {
-        vTaskDelay(pdMS_TO_TICKS(5));
+        if (millis() > Timeout)
+        {
+            return Update_Failed;
+        }
     }
-    if (Nextion_Serial.read() != 0x05)
-    {
-        //error - unexpected return number
-        return Update_Failed;
-    }
+
     Nextion_Serial.write(Temporary_Buffer, Remaining_Bytes);
-    while (Nextion_Serial.available() == 0)
+
+    Timeout = millis() + 3000;
+    while (Nextion_Serial.read() != 0x05)
     {
-        vTaskDelay(pdMS_TO_TICKS(5));
+        if (millis() > Timeout)
+        {
+            return Update_Failed;
+        }
     }
-    if (Nextion_Serial.read() != 0x05)
-    {
-        //error - unexpected return number
-        return Update_Failed;
-    }
+
     return Update_Succeed;
 }
 
@@ -1143,10 +1166,10 @@ void Nextion_Class::Set_Draw_Color(uint16_t const &Color)
     Instruction_End();
 }
 
-void Nextion_Class::Set_Baud_Rate(uint32_t const &Baudrate, bool const &Save)
+void Nextion_Class::Set_Display_Baud_Rate(uint32_t const &Baud_Rate, bool const &Save)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
-    if (Baudrate > 921000)
+    if (Baud_Rate > 921000)
     {
         return;
     }
@@ -1156,8 +1179,13 @@ void Nextion_Class::Set_Baud_Rate(uint32_t const &Baudrate, bool const &Save)
         Nextion_Serial.print(F("s"));
     }
     Nextion_Serial.print(F("="));
-    Nextion_Serial.print(Baudrate);
+    Nextion_Serial.print(Baud_Rate);
     Instruction_End();
+}
+
+void Nextion_Class::Set_Baud_Rate(uint32_t const &Baud_Rate)
+{
+    Nextion_Serial.updateBaudRate(Baud_Rate);
 }
 
 void Nextion_Class::Set_Brightness(uint16_t const &Brightness, bool const &Save)
