@@ -1,26 +1,24 @@
 {
-    "name": "Nextion Display",
-    "version": "1.0.0",
-    "description": "A simple and lightweight library for Nextion based displays.",
-    "keywords": "display, screen, nextion, arduino, hmi, tft",
-    "repository":
+  "name": "Nextion Library",
+  "version": "1.0.0",
+  "description": "A simple and lightweight library for Nextion based displays.",
+  "keywords": "display, screen, nextion, arduino, hmi, tft",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AlixANNERAUD/Nextion-Library.git"
+  },
+  "authors": [
     {
-      "type": "git",
-      "url": "https://github.com/AlixANNERAUD/Nextion-Library.git"
-    },
-    "authors":
-    [
-      {
-        "name": "Alix ANNERAUD",
-        "email": "alix.anneraud@outlook.fr",
-        "url": "https://alixfaitgrr.fr/",
-        "maintainer": true
-      }
-    ],
-    "license": "MIT",
-    "homepage": "https://alixfaitgrr.fr/",
-    "dependencies": {
-    },
-    "frameworks": "arduino",
-    "platforms": ["espressif32"]
-  }
+      "name": "Alix ANNERAUD",
+      "email": "alix.anneraud@outlook.fr",
+      "url": "https://alixfaitgrr.fr/",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://alixfaitgrr.fr/",
+  "frameworks": "arduino",
+  "platforms": [
+    "espressif32"
+  ]
+}
