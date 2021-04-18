@@ -118,7 +118,7 @@ public:
     void Draw_Picture(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Picture_ID);
     void Draw_Crop_Picture(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Picture_ID);
     void Draw_Advanced_Crop_Picture(uint16_t X_Destination, uint16_t Y_Destination, uint16_t Width, uint16_t Height, uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Picture_ID);
-    void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Backgroud, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, String Text);
+    void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Backgroud, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, String const& Text);
     void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Backgroud, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, const char *Text);
 
     // -- Set object attributes methods
@@ -147,7 +147,7 @@ public:
     void Set_Minimum_Value(const __FlashStringHelper *Object_Name, uint16_t Value);
 
     void Set_Value(const __FlashStringHelper *Object_Name, uint32_t Value);
-    void Set_Value(String Object_Name, uint32_t Value);
+    void Set_Value(String const& Object_Name, uint32_t Value);
     void Set_Value(const char *Object_Name, uint32_t Value);
 
     void Set_Global_Variable(const __FlashStringHelper *Object_Name, uint32_t Value);

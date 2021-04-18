@@ -300,18 +300,17 @@ void Nextion_Class::Set_Waveform_Refresh(bool Enable)
     Instruction_End();
 }
 
-uint8_t Nextion_Class::Get_Adress()
+uint16_t Nextion_Class::Get_Adress()
 {
     return Adress;
 }
 
-void Nextion_Class::Set_Adress(uint8_t Adress)
+void Nextion_Class::Set_Adress(uint16_t Adress)
 {
     this->Adress = Adress;
 }
 
-
-uint8_t &Nextion_Class::Get_Current_Page()
+uint8_t Nextion_Class::Get_Current_Page()
 {
     return Page_History[0];
 }
@@ -640,7 +639,7 @@ void Nextion_Class::Delete_Text(const __FlashStringHelper *Component_Name, uint8
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Component_Name);
     Nextion_Serial.print(F(".txt-="));
-    Nextion_Serial.print(Quantity_To_Delete);
+    Nextion_Serial.print(Quantity);
     Instruction_End();
 }
 
@@ -658,7 +657,7 @@ void Nextion_Class::Set_Value(String const &Object_Name, uint32_t Value)
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
     Nextion_Serial.print(F(".val="));
-    Nextion_Serial.print(String(Value));
+    Nextion_Serial.print(Value);
     Instruction_End();
 }
 
@@ -1032,16 +1031,6 @@ void Nextion_Class::Set_Touch_Event(const __FlashStringHelper *Object_Name, bool
     Instruction_End();
 }
 
-void Nextion_Class::Set_Touch_Event(const __FlashStringHelper *Object_ID, bool Enable)
-{
-    xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
-    Nextion_Serial.print(F("tsw "));
-    Nextion_Serial.print(Object_ID);
-    Argument_Separator();
-    Nextion_Serial.print(Enable);
-    Instruction_End();
-}
-
 void Nextion_Class::Set_Execution(bool Enable)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
@@ -1177,8 +1166,8 @@ void Nextion_Class::Set_Wordwrap(const __FlashStringHelper *Object_Name, bool Wo
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(Object_Name);
-    Nextion_Serial.print(F(".isbr="))
-        Nextion_Serial.print(Wordwrap);
+    Nextion_Serial.print(F(".isbr="));
+    Nextion_Serial.print(Wordwrap);
     Instruction_End();
 }
 
