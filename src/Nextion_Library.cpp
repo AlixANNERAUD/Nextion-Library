@@ -79,7 +79,7 @@ void Nextion_Class::Default_Callback_Function_Event(uint8_t Event)
 {
 }
 
-void Nextion_Class::Loop() //Parsing incomming data
+void Nextion_Class::Loop() //Parsing ² data
 {
     if (Nextion_Serial.available())
     {
@@ -91,7 +91,7 @@ void Nextion_Class::Loop() //Parsing incomming data
 
             Nextion_Serial.readBytes((char *)Temporary_String, 7);
 
-            if (Temporary_String[4] == 0xFF && Temporary_String[5] == 0xFF && Temporary_String[6] == 0xFF)
+            if (Instruction_End(Temporary_String +  4))
             {
                 uint32_t Temporary_Long = ((uint32_t)Temporary_String[3] << 24) | ((uint32_t)Temporary_String[2] << 16) | ((uint32_t)Temporary_String[1] << 8) | (Temporary_String[0]);
 
@@ -110,7 +110,7 @@ void Nextion_Class::Loop() //Parsing incomming data
         case Current_Page_Number:
             Nextion_Serial.readBytes((char *)Temporary_String, 4);
 
-            if (Temporary_String[1] == 0xFF && Temporary_String[2] == 0xFF && Temporary_String[3] == 0xFF)
+            if (Instruction_End(Temporary_String + 1))
             {
                 if (Temporary_String[0] != Page_History[0])
                 {
@@ -168,7 +168,7 @@ void Nextion_Class::Loop() //Parsing incomming data
         case Invalid_CRC:
         case Invalid_Baud_Rate_Setting:
         case Invalid_Waveform_ID_Or_Channel:
-        case Invalid_Variable_Name_Or_Attribue:
+        case Invalid_Variable_Name_Or_Attribute:
         case Invalid_Variable_Operation:
         case Fail_To_Assign:
         case Invalid_Quantity_Of_Parameters:
@@ -177,7 +177,7 @@ void Nextion_Class::Loop() //Parsing incomming data
         case Too_Long_Variable_Name:
         case Serial_Buffer_Overflow:
             Nextion_Serial.readBytes((char *)Temporary_String, 3);
-            if (Temporary_String[0] == 0xFF && Temporary_String[1] == 0xFF && Temporary_String[2] == 0xFF)
+            if (Instruction_End(Temporary_String))
             {
                 Callback_Function_Event(Return_Code);
             }
@@ -192,14 +192,14 @@ void Nextion_Class::Loop() //Parsing incomming data
             {
             case 0x00: // Startup Instruction
                 Nextion_Serial.readBytes((char *)Temporary_String, 4);
-                if (Temporary_String[0] == 0x00 && Temporary_String[1] == 0x00 && Temporary_String[2] == 0xFF && Temporary_String[3] == 0xFF)
+                if (Temporary_String[0] == 0x00 && Temporary_String[1] == 0x00 && Temporary_String[2] == 0xFF && Instruction_End(Temporary_String + 3))
                 {
                     if (Callback_Function_Event != NULL)
                     {
                         Callback_Function_Event(Startup);
                     }
                 }
-                else // unrecognize command : purge serial
+                else // unrecognized command : purge serial
                 {
                     Purge();
                 }
@@ -300,18 +300,25 @@ void Nextion_Class::Set_Waveform_Refresh(bool Enable)
     Instruction_End();
 }
 
-uint16_t Nextion_Class::Get_Adress()
+uint16_t Nextion_Class::Get_Address()
 {
-    return Adress;
+    return Address;
 }
 
-void Nextion_Class::Set_Adress(uint16_t Adress)
+void Nextion_Class::Set_Address(uint16_t Address)
 {
-    this->Adress = Adress;
+    this->Address = Address;
 }
 
-uint8_t Nextion_Class::Get_Current_Page()
+uint8_t Nextion_Class::Get_Current_Page(bool Refresh_Now)
 {
+    if (Refresh_Now)
+    {
+        xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+        Nextion_Serial.print(F("sendme"));
+        Instruction_End();
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
     return Page_History[0];
 }
 
@@ -762,7 +769,7 @@ void Nextion_Class::Set_Grid_Color(const __FlashStringHelper *Object_Name, uint1
     Instruction_End();
 }
 
-void Nextion_Class::Set_Data_Scalling(const __FlashStringHelper *Object_Name, uint16_t Scale)
+void Nextion_Class::Set_Data_Scaling(const __FlashStringHelper *Object_Name, uint16_t Scale)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     if (Scale < 10 || Scale > 1000)
@@ -791,7 +798,7 @@ void Nextion_Class::Draw_Crop_Picture(uint16_t X_Coordinate, uint16_t Y_Coordina
     Instruction_End();
 }
 
-void Nextion_Class::Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Backgroud, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, String const &Text)
+void Nextion_Class::Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Background, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, String const &Text)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("xstr "));
@@ -807,7 +814,7 @@ void Nextion_Class::Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint
     Argument_Separator();
     Nextion_Serial.print(Text_Color);
     Argument_Separator();
-    Nextion_Serial.print(Backgroud);
+    Nextion_Serial.print(Background);
     Argument_Separator();
     Nextion_Serial.print(Horizontal_Alignment);
     Argument_Separator();
@@ -821,7 +828,7 @@ void Nextion_Class::Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint
     Instruction_End();
 }
 
-void Nextion_Class::Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Backgroud, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, const char *Text)
+void Nextion_Class::Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Background, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, const char *Text)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("xstr "));
@@ -837,7 +844,7 @@ void Nextion_Class::Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint
     Argument_Separator();
     Nextion_Serial.print(Text_Color);
     Argument_Separator();
-    Nextion_Serial.print(Backgroud);
+    Nextion_Serial.print(Background);
     Argument_Separator();
     Nextion_Serial.print(Horizontal_Alignment);
     Argument_Separator();

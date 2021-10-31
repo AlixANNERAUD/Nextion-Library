@@ -37,7 +37,7 @@ public:
         Invalid_CRC = 0x09,
         Invalid_Baud_Rate_Setting = 0x11,
         Invalid_Waveform_ID_Or_Channel = 0x12,
-        Invalid_Variable_Name_Or_Attribue = 0x1A,
+        Invalid_Variable_Name_Or_Attribute = 0x1A,
         Invalid_Variable_Operation = 0x1B,
         Fail_To_Assign = 0x1C,
         Fail_EEPROM_Operation = 0x1D,
@@ -78,7 +78,7 @@ public:
         White = 65535
     };
 
-    enum Alignements
+    enum Alignments
     {
         Top = 0,
         Bottom = 3,
@@ -118,8 +118,8 @@ public:
     void Draw_Picture(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Picture_ID);
     void Draw_Crop_Picture(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Picture_ID);
     void Draw_Advanced_Crop_Picture(uint16_t X_Destination, uint16_t Y_Destination, uint16_t Width, uint16_t Height, uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Picture_ID);
-    void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Backgroud, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, String const& Text);
-    void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Backgroud, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, const char *Text);
+    void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Background, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, String const& Text);
+    void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Background, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, const char *Text);
 
     // -- Set object attributes methods
     void Set_Font(const __FlashStringHelper *Object_Name, uint8_t Font_ID);
@@ -156,7 +156,7 @@ public:
     void Set_Grid_Color(const __FlashStringHelper *Object_Name, uint16_t Color);
     void Set_Grid_Width(const __FlashStringHelper *Object_Name, uint16_t Width);
     void Set_Grid_Height(const __FlashStringHelper *Object_Name, uint16_t Height);
-    void Set_Data_Scalling(const __FlashStringHelper *Object_Name, uint16_t Scale);
+    void Set_Data_Scaling(const __FlashStringHelper *Object_Name, uint16_t Scale);
 
     void Set_Picture(const __FlashStringHelper *Object_Name, uint8_t Picture_ID);
     void Set_Picture(String const &Object_Name, uint8_t Picture_ID);
@@ -169,7 +169,7 @@ public:
     // Set System Global Variable
     void Set_Current_Page(uint8_t Page_ID);
     void Set_Current_Page(const __FlashStringHelper *Page_Name);
-    uint8_t Get_Current_Page();
+    uint8_t Get_Current_Page(bool Refresh_Now = true);
     void Set_Brightness(uint16_t Brightness, bool Save = false);
     void Set_Display_Baud_Rate(uint32_t Baud_Rate, bool Save);
 
@@ -248,7 +248,7 @@ public:
     uint8_t Update(File Update_File);
 
     // -- Setter methods
-    void Set_Adress(uint16_t Adress);
+    void Set_Address(uint16_t Address);
     void Set_Baud_Rate(uint32_t Baud_Rate);
 
     void Set_Callback_Function_String_Data(void (*Function_Pointer)(const char *, uint8_t));
@@ -256,7 +256,7 @@ public:
     void Set_Callback_Function_Event(void (*Function_Pointer)(uint8_t));
 
     // -- Getter methods
-    uint16_t Get_Adress();
+    uint16_t Get_Address();
 
 protected:
     // -- Methods
@@ -274,6 +274,15 @@ protected:
         Nextion_Serial.write(',');
     }
 
+    inline bool Instruction_End(char* String)
+    {
+        if (String[0] == 0xFF && String[1] == 0xFF && String[2] == 0xFF)
+        {
+            return true;
+        }
+        return false;
+    }
+
     // -- Attributes
     static Nextion_Class *Instance_Pointer;
 
@@ -282,7 +291,7 @@ protected:
     uint32_t Baud_Rate;
     HardwareSerial Nextion_Serial;
     SemaphoreHandle_t Serial_Semaphore;
-    uint16_t Adress;
+    uint16_t Address;
 
     void (*Callback_Function_String_Data)(const char *, uint8_t);
     void (*Callback_Function_Numeric_Data)(uint32_t);
