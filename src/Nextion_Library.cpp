@@ -79,19 +79,28 @@ void Nextion_Class::Default_Callback_Function_Event(uint8_t Event)
 {
 }
 
-void Nextion_Class::Loop() //Parsing ² data
+///
+/// @brief Main loop (data parsing etc.).
+///
+void Nextion_Class::Loop()
 {
     if (Nextion_Serial.available())
     {
         Return_Code = Nextion_Serial.read();
         memset(Temporary_String, '\0', sizeof(Temporary_String));
+        
+        if (Expected_Event == Return_Code)
+        {
+            State = true;
+        }
+
         switch (Return_Code)
         {
         case Numeric_Data_Enclosed:
 
             Nextion_Serial.readBytes((char *)Temporary_String, 7);
 
-            if (Instruction_End(Temporary_String +  4))
+            if (Instruction_End(Temporary_String + 4))
             {
                 uint32_t Temporary_Long = ((uint32_t)Temporary_String[3] << 24) | ((uint32_t)Temporary_String[2] << 16) | ((uint32_t)Temporary_String[1] << 8) | (Temporary_String[0]);
 
@@ -310,6 +319,11 @@ void Nextion_Class::Set_Address(uint16_t Address)
     this->Address = Address;
 }
 
+///
+ /// @brief Return current displayed page ID.
+ /// 
+ /// @param Refresh_Now
+ /// @return uint8_t 
 uint8_t Nextion_Class::Get_Current_Page(bool Refresh_Now)
 {
     if (Refresh_Now)
@@ -317,7 +331,7 @@ uint8_t Nextion_Class::Get_Current_Page(bool Refresh_Now)
         xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
         Nextion_Serial.print(F("sendme"));
         Instruction_End();
-        vTaskDelay(pdMS_TO_TICKS(20));
+        Wait_For_Event(Current_Page_Number);
     }
     return Page_History[0];
 }

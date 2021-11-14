@@ -118,7 +118,7 @@ public:
     void Draw_Picture(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Picture_ID);
     void Draw_Crop_Picture(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Picture_ID);
     void Draw_Advanced_Crop_Picture(uint16_t X_Destination, uint16_t Y_Destination, uint16_t Width, uint16_t Height, uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Picture_ID);
-    void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Background, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, String const& Text);
+    void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Background, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, String const &Text);
     void Draw_Text(uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Width, uint16_t Height, uint16_t Font_ID, uint16_t Text_Color, uint16_t Background, uint16_t Horizontal_Alignment, uint16_t Vertical_Alignment, uint16_t Background_Type, const char *Text);
 
     // -- Set object attributes methods
@@ -147,7 +147,7 @@ public:
     void Set_Minimum_Value(const __FlashStringHelper *Object_Name, uint16_t Value);
 
     void Set_Value(const __FlashStringHelper *Object_Name, uint32_t Value);
-    void Set_Value(String const& Object_Name, uint32_t Value);
+    void Set_Value(String const &Object_Name, uint32_t Value);
     void Set_Value(const char *Object_Name, uint32_t Value);
 
     void Set_Global_Variable(const __FlashStringHelper *Object_Name, uint32_t Value);
@@ -197,7 +197,7 @@ public:
     void Start_Sending_Realtime_Coordinate();
     void Stop_Sending_Realtime_Coordinate();
 
-    // -- Raw 
+    // -- Raw
 
     void Write(int Data);
     void Send_Raw(const __FlashStringHelper *Data);
@@ -222,10 +222,9 @@ public:
 
     void Set_Waveform_Refresh(bool Enable);
 
-
     void Add_Value_Waveform(uint8_t Component_ID, uint8_t Channel, uint8_t *Data, uint32_t Quantity = 0);
     void Clear_Waveform(uint16_t Component_ID, uint8_t Channel);
-    
+
     void Get(const __FlashStringHelper *Attribute);
 
     void Calibrate();
@@ -244,7 +243,7 @@ public:
     void Set_Execution(bool Enable);
 
     void Reboot();
-    
+
     uint8_t Update(File Update_File);
 
     // -- Setter methods
@@ -274,7 +273,7 @@ protected:
         Nextion_Serial.write(',');
     }
 
-    inline bool Instruction_End(char* String)
+    inline bool Instruction_End(char *String)
     {
         if (String[0] == 0xFF && String[1] == 0xFF && String[2] == 0xFF)
         {
@@ -283,7 +282,41 @@ protected:
         return false;
     }
 
+    inline bool Wait_For_Event(uint8_t Expected_Event, uint32_t Time_Out = 250)
+    {
+        Time_Out = Time_Out + millis();
+        while (this->Expected_Event == 0xFF || this->Expected_Event != Expected_Event)
+        {
+            if (Time_Out > millis())
+            {
+                return false;
+            }
+            vTaskDelay(pdMS_TO_TICKS(20));
+        }
+
+        this->Expected_Event = Expected_Event;
+        State = false;
+
+        while (this->Expected_Event == Expected_Event && State == false)
+        {
+            if (Time_Out > millis())
+            {
+                return false;
+            }
+            vTaskDelay(pdMS_TO_TICKS(20));
+        }
+
+        State = false;
+        this->Expected_Event = 0xFF;
+
+        return true;
+    }
+
     // -- Attributes
+
+    volatile uint8_t Expected_Event = 0xFF;
+    volatile bool State = false;
+
     static Nextion_Class *Instance_Pointer;
 
     uint8_t Page_History[5];
