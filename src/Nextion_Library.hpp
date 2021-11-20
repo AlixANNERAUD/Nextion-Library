@@ -167,8 +167,8 @@ public:
     void Set_Reparse_Mode(uint8_t Mode);
 
     // Set System Global Variable
-    void Set_Current_Page(uint8_t Page_ID);
-    void Set_Current_Page(const __FlashStringHelper *Page_Name);
+    bool Set_Current_Page(uint8_t Page_ID, bool Feedback = true);
+    bool Set_Current_Page(const __FlashStringHelper *Page_Name);
     uint8_t Get_Current_Page(bool Refresh_Now = true);
     void Set_Brightness(uint16_t Brightness, bool Save = false);
     void Set_Display_Baud_Rate(uint32_t Baud_Rate, bool Save);

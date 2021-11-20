@@ -336,15 +336,23 @@ uint8_t Nextion_Class::Get_Current_Page(bool Refresh_Now)
     return Page_History[0];
 }
 
-void Nextion_Class::Set_Current_Page(uint8_t Page_ID)
+bool Nextion_Class::Set_Current_Page(uint8_t Page_ID, bool Feedback)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("page "));
     Nextion_Serial.print(Page_ID);
     Instruction_End();
+    if (Feedback == true)
+    {
+        if (Get_Current_Page(true) != Page_ID)
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
-void Nextion_Class::Set_Current_Page(const __FlashStringHelper *Page_Name)
+bool Nextion_Class::Set_Current_Page(const __FlashStringHelper *Page_Name)
 {
     xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
     Nextion_Serial.print(F("page "));
