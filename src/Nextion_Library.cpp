@@ -88,7 +88,7 @@ void Nextion_Class::Loop()
     {
         Return_Code = Nextion_Serial.read();
         memset(Temporary_String, '\0', sizeof(Temporary_String));
-        
+
         if (Expected_Event == Return_Code)
         {
             State = true;
@@ -320,10 +320,10 @@ void Nextion_Class::Set_Address(uint16_t Address)
 }
 
 ///
- /// @brief Return current displayed page ID.
- /// 
- /// @param Refresh_Now
- /// @return uint8_t 
+/// @brief Return current displayed page ID.
+///
+/// @param Refresh_Now
+/// @return uint8_t
 uint8_t Nextion_Class::Get_Current_Page(bool Refresh_Now)
 {
     if (Refresh_Now)
@@ -338,17 +338,22 @@ uint8_t Nextion_Class::Get_Current_Page(bool Refresh_Now)
 
 bool Nextion_Class::Set_Current_Page(uint8_t Page_ID, bool Feedback)
 {
-    xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
-    Nextion_Serial.print(F("page "));
-    Nextion_Serial.print(Page_ID);
-    Instruction_End();
-    if (Feedback == true)
+    for (uint8_t i = 0; i <= 3; i++) // -- Attempts to switch page.
     {
-        if (Get_Current_Page(true) != Page_ID)
+        xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
+        Nextion_Serial.print(F("page "));
+        Nextion_Serial.print(Page_ID);
+        Instruction_End();
+        if (i >= 3)
         {
             return false;
         }
+        if (Get_Current_Page(true) == Page_ID || Feedback == false)
+        {
+            break;
+        }
     }
+
     return true;
 }
 
@@ -358,6 +363,7 @@ bool Nextion_Class::Set_Current_Page(const __FlashStringHelper *Page_Name)
     Nextion_Serial.print(F("page "));
     Nextion_Serial.print(Page_Name);
     Instruction_End();
+    return true;
 }
 
 void Nextion_Class::Draw_Advanced_Crop_Picture(uint16_t X_Destination, uint16_t Y_Destination, uint16_t Width, uint16_t Height, uint16_t X_Coordinate, uint16_t Y_Coordinate, uint16_t Picture_ID)
