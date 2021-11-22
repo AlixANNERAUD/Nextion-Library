@@ -86,6 +86,7 @@ void Nextion_Class::Loop()
 {
     if (Nextion_Serial.available())
     {
+
         Return_Code = Nextion_Serial.read();
         memset(Temporary_String, '\0', sizeof(Temporary_String));
 
@@ -100,7 +101,7 @@ void Nextion_Class::Loop()
 
             Nextion_Serial.readBytes((char *)Temporary_String, 7);
 
-            if (Instruction_End(Temporary_String + 4))
+            if (Ending(Temporary_String + 4))
             {
                 uint32_t Temporary_Long = ((uint32_t)Temporary_String[3] << 24) | ((uint32_t)Temporary_String[2] << 16) | ((uint32_t)Temporary_String[1] << 8) | (Temporary_String[0]);
 
@@ -118,8 +119,7 @@ void Nextion_Class::Loop()
             break;
         case Current_Page_Number:
             Nextion_Serial.readBytes((char *)Temporary_String, 4);
-
-            if (Instruction_End(Temporary_String + 1))
+            if (Ending(Temporary_String + 1))
             {
                 if (Temporary_String[0] != Page_History[0])
                 {
@@ -136,7 +136,6 @@ void Nextion_Class::Loop()
             {
                 Purge();
             }
-
             break;
 
         case Touch_Coordinate_Awake:
@@ -186,7 +185,7 @@ void Nextion_Class::Loop()
         case Too_Long_Variable_Name:
         case Serial_Buffer_Overflow:
             Nextion_Serial.readBytes((char *)Temporary_String, 3);
-            if (Instruction_End(Temporary_String))
+            if (Ending(Temporary_String))
             {
                 Callback_Function_Event(Return_Code);
             }
@@ -201,7 +200,7 @@ void Nextion_Class::Loop()
             {
             case 0x00: // Startup Instruction
                 Nextion_Serial.readBytes((char *)Temporary_String, 4);
-                if (Temporary_String[0] == 0x00 && Temporary_String[1] == 0x00 && Temporary_String[2] == 0xFF && Instruction_End(Temporary_String + 3))
+                if (Temporary_String[0] == 0x00 && Temporary_String[1] == 0x00 && Temporary_String[2] == 0xFF && Ending(Temporary_String + 3))
                 {
                     if (Callback_Function_Event != NULL)
                     {
@@ -340,18 +339,22 @@ bool Nextion_Class::Set_Current_Page(uint8_t Page_ID, bool Feedback)
 {
     for (uint8_t i = 0; i <= 3; i++) // -- Attempts to switch page.
     {
+        DUMP("Set current page");
         xSemaphoreTake(Serial_Semaphore, portMAX_DELAY);
         Nextion_Serial.print(F("page "));
         Nextion_Serial.print(Page_ID);
         Instruction_End();
         if (i >= 3)
         {
+            DUMP("Failed to set current page.");
             return false;
         }
         if (Get_Current_Page(true) == Page_ID || Feedback == false)
         {
+            DUMP("Find page.");
             break;
         }
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 
     return true;

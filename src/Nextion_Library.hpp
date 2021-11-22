@@ -273,7 +273,7 @@ protected:
         Nextion_Serial.write(',');
     }
 
-    inline bool Instruction_End(char *String)
+    inline bool Ending(char *String)
     {
         if (String[0] == 0xFF && String[1] == 0xFF && String[2] == 0xFF)
         {
@@ -282,12 +282,12 @@ protected:
         return false;
     }
 
-    inline bool Wait_For_Event(uint8_t Expected_Event, uint32_t Time_Out = 250)
+    inline bool Wait_For_Event(uint8_t Expected_Event, uint32_t Time_Out = 500)
     {
         Time_Out = Time_Out + millis();
-        while (this->Expected_Event == 0xFF || this->Expected_Event != Expected_Event)
+        while (this->Expected_Event != 0xFF && this->Expected_Event != Expected_Event)
         {
-            if (Time_Out > millis())
+            if (Time_Out < millis())
             {
                 return false;
             }
@@ -297,10 +297,12 @@ protected:
         this->Expected_Event = Expected_Event;
         State = false;
 
-        while (this->Expected_Event == Expected_Event && State == false)
+        while (State == false)
         {
-            if (Time_Out > millis())
+            if (Expected_Event != Expected_Event || Time_Out < millis())
             {
+                State = false;
+                this->Expected_Event = 0xFF;
                 return false;
             }
             vTaskDelay(pdMS_TO_TICKS(20));
